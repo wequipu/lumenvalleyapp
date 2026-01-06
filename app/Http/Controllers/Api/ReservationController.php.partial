@@ -1,0 +1,20 @@
+        // --- Price Calculation ---
+        $totalPrice = 0;
+        
+        // Calculate price for accommodation or conference room if applicable
+        if ($validated['reservable_type'] !== 'service_only' && !empty($validated['reservable_id'])) {
+            $reservable = $validated['reservable_type']::find($validated['reservable_id']);
+
+            if ($reservable) {
+                if ($validated['reservable_type'] === 'App\\\\Models\\\\Accommodation') {
+                    $checkin = new \\Carbon\\Carbon($validated['checkin_date']);
+                    $checkout = new \\Carbon\\Carbon($validated['checkout_date']);
+                    $nights = $checkin->diffInDays($checkout);
+                    $totalPrice += $nights * $reservable->nightly_rate;
+                } else if ($validated['reservable_type'] === 'App\\\\Models\\\\ConferenceRoom') {
+                    $rate = $request->input('rate_type') === 'hourly' ? $reservable->hourly_rate : $reservable->daily_rate;
+                    $duration = $request->input('duration_units', 1);
+                    $totalPrice += $duration * $rate;
+                }
+            }
+        }
